@@ -43,7 +43,7 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* signal line — transparent canvas over the background halo */
+  /* canvas renders the background halo and rising signal */
   #signal{
     position:fixed;
     inset:0;
@@ -216,9 +216,25 @@
 
   let t = 0;
 
+  function drawHalo(){
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.translate(w * 0.5, h * 0.42);
+    ctx.scale(w * 1.15, h * 0.92);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+    g.addColorStop(0, '#FFFFFF');
+    g.addColorStop(0.34, '#FFFFFF');
+    g.addColorStop(0.54, '#ECEEF1');
+    g.addColorStop(0.74, '#D0D5DC');
+    g.addColorStop(1, '#A8AEB6');
+    ctx.fillStyle = g;
+    ctx.fillRect(-1, -1, 2, 2);
+    ctx.restore();
+  }
+
   // a long quiet baseline that, in the final stretch, lifts off the floor
   function draw(){
-    ctx.clearRect(0,0,w,h);
+    drawHalo();
     const midY = h*0.66;
     const startX = -w*0.05;
     const endX = w*1.05;
