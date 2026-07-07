@@ -8,7 +8,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root{
-    --void:#A9AFB7;
+    --void:#EDEEF0;
     --void-2:#F4F5F6;
     --ash:#7C828C;
     --ash-dim:#B9BEC6;
@@ -207,10 +207,17 @@
   addEventListener('resize', size);
 
   let t = 0;
+  const born = performance.now();
 
   function drawHalo(){
-    // grey field, like the corners of the reference design
-    ctx.fillStyle = '#A9AFB7';
+    // bloom in after the signal has had its moment (2.2s in, over 1.8s)
+    const elapsed = (performance.now() - born) / 1000;
+    const raw = reduce ? 1 : Math.min(Math.max((elapsed - 2.2) / 1.8, 0), 1);
+    const k = raw * raw * (3 - 2 * raw); // smoothstep ease
+
+    // base starts at the quiet page grey and deepens as the halo appears
+    const mix = (a, b) => Math.round(a + (b - a) * k);
+    ctx.fillStyle = `rgb(${mix(237,153)},${mix(238,159)},${mix(240,169)})`;
     ctx.fillRect(0, 0, w, h);
 
     // white spotlight that fades out before the farthest corner,
@@ -218,10 +225,10 @@
     const cx = w * 0.5, cy = h * 0.45;
     const R = Math.hypot(w * 0.5, h * 0.55);
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-    g.addColorStop(0,    '#FFFFFF');
-    g.addColorStop(0.42, '#FFFFFF');
-    g.addColorStop(0.66, 'rgba(255,255,255,0.6)');
-    g.addColorStop(0.86, 'rgba(255,255,255,0.14)');
+    g.addColorStop(0,    `rgba(255,255,255,${k})`);
+    g.addColorStop(0.36, `rgba(255,255,255,${k})`);
+    g.addColorStop(0.58, `rgba(255,255,255,${0.55*k})`);
+    g.addColorStop(0.8,  `rgba(255,255,255,${0.12*k})`);
     g.addColorStop(1,    'rgba(255,255,255,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
@@ -230,6 +237,12 @@
   // a long quiet baseline that, in the final stretch, lifts off the floor
   function draw(){
     drawHalo();
+
+    // the signal emerges: flat at first, lifting off between 0.8s and 2.6s
+    const elapsed = (performance.now() - born) / 1000;
+    const er = reduce ? 1 : Math.min(Math.max((elapsed - 0.8) / 1.8, 0), 1);
+    const emerge = er * er * (3 - 2 * er);
+
     const midY = h*0.66;
     const startX = -w*0.05;
     const endX = w*1.05;
@@ -245,50 +258,67 @@
       const p = i/steps;
       const x = startX + (endX-startX)*p;
 
-      // baseline micro-noise (almost flat)
-      const noise = Math.sin(p*60 + t*0.6)*1.2 + Math.sin(p*23 - t*0.3)*0.8;
+      // longitudinal baseline: low-amplitude physiological drift + noise,
+      // the signal sitting quietly within its normal range
+      const baseNoise =
+        Math.sin(p*38 + t*0.5)*1.0 +
+        Math.sin(p*17 - t*0.35)*0.7 +
+        Math.sin(p*83 + t*0.9)*0.35;
 
-      // the rise: dormant until ~72%, then accelerates upward
-      const onset = 0.72;
-      let rise = 0;
+      // departure: the biomarker begins deviating early and builds — a
+      // gentle exponential emergence rather than a sudden inflection
+      const onset = 0.5;
+      let departure = 0;
       if(p > onset){
         const k = (p-onset)/(1-onset);
-        rise = Math.pow(k, 2.4) * h*0.34;
+        // exponential-style takeoff, eased in so the break from baseline is soft
+        departure = (Math.exp(k*2.6) - 1) / (Math.exp(2.6) - 1);
       }
-      // a faint breathing in the rising zone
-      const breathe = p>onset ? Math.sin(t*0.9 + p*8)* (p-onset)*14 : 0;
 
-      const y = midY + (noise*dpr) - (rise) - (breathe*dpr*0.4);
+      // rising volatility: as the host response emerges, variance grows —
+      // the tracked signal gets noisier before it clearly separates
+      const volatility = departure * (
+        Math.sin(p*120 + t*2.2)*3.2 +
+        Math.sin(p*57 - t*1.6)*2.1
+      );
+
+      const rise = departure * h*0.36 * emerge;
+      const y = midY + (baseNoise*dpr) - rise - (volatility*dpr*emerge);
 
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       tipX=x; tipY=y;
     }
 
-    // gradient: ash on the flat, signal as it climbs
+    // gradient: ash on the flat; the climb reddens as the signal emerges
+    const lerp = (a,b,k) => (a+(b-a)*k)|0;
+    const warm = `rgba(${lerp(140,190,emerge)},${lerp(146,80,emerge)},${lerp(154,55,emerge)},0.85)`;
+    const hot  = `rgba(${lerp(140,192,emerge)},${lerp(146,57,emerge)},${lerp(154,43,emerge)},1)`;
     const grad = ctx.createLinearGradient(startX,0,endX,0);
     grad.addColorStop(0,   'rgba(150,156,164,0.0)');
     grad.addColorStop(0.15,'rgba(150,156,164,0.6)');
-    grad.addColorStop(0.72,'rgba(140,146,154,0.75)');
-    grad.addColorStop(0.85,'rgba(190,80,55,0.85)');
-    grad.addColorStop(1,   'rgba(192,57,43,1)');
+    grad.addColorStop(0.5, 'rgba(140,146,154,0.75)');
+    grad.addColorStop(0.78, warm);
+    grad.addColorStop(1,    hot);
     ctx.strokeStyle = grad;
     ctx.shadowBlur = 0;
     ctx.stroke();
 
-    // glowing head at the tip
-    ctx.beginPath();
-    ctx.arc(tipX, tipY, 3.4*dpr, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(192,57,43,0.9)';
-    ctx.shadowColor = 'rgba(192,57,43,0.85)';
-    ctx.shadowBlur = 34*dpr;
-    ctx.fill();
-    ctx.shadowBlur = 14*dpr;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(tipX, tipY, 3.2*dpr, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(192,57,43,1)';
-    ctx.fill();
+    // glowing head at the tip, igniting with the rise
+    if(emerge > 0.01){
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 3.4*dpr, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(192,57,43,${0.9*emerge})`;
+      ctx.shadowColor = `rgba(192,57,43,${0.85*emerge})`;
+      ctx.shadowBlur = 34*dpr;
+      ctx.fill();
+      ctx.shadowBlur = 14*dpr;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 3.2*dpr, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(192,57,43,${emerge})`;
+      ctx.fill();
+    }
 
     if(!reduce){ t += 0.016; requestAnimationFrame(draw); }
   }
