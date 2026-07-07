@@ -217,16 +217,18 @@
   let t = 0;
 
   function drawHalo(){
+    ctx.fillStyle = '#8F97A2';
+    ctx.fillRect(0, 0, w, h);
+
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.translate(w * 0.5, h * 0.42);
-    ctx.scale(w * 1.15, h * 0.92);
+    ctx.scale(w * 1.05, h * 0.88);
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
     g.addColorStop(0, '#FFFFFF');
-    g.addColorStop(0.38, '#FFFFFF');
-    g.addColorStop(0.58, '#ECEEF1');
-    g.addColorStop(0.78, '#C8CDD4');
-    g.addColorStop(1, '#9BA3AE');
+    g.addColorStop(0.42, '#FFFFFF');
+    g.addColorStop(0.68, 'rgba(236,238,241,0.92)');
+    g.addColorStop(0.88, 'rgba(200,205,212,0.45)');
+    g.addColorStop(1, 'rgba(143,151,162,0)');
     ctx.fillStyle = g;
     ctx.fillRect(-1, -1, 2, 2);
     ctx.restore();
