@@ -32,19 +32,11 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* the signal canvas — a flat line that, far right, begins to rise */
-  #signal{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    z-index:0;
-  }
-
+  /* background halo */
   .vignette{
     position:fixed;
     inset:0;
-    z-index:1;
+    z-index:0;
     pointer-events:none;
     background:radial-gradient(
       ellipse 92% 78% at 50% 44%,
@@ -54,6 +46,16 @@
       #D8DCE2 72%,
       rgba(196,201,208,0) 100%
     );
+  }
+
+  /* signal line — above vignette so the rising trace stays visible */
+  #signal{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+    pointer-events:none;
   }
 
   .frame{
@@ -176,8 +178,8 @@
 </style>
 </head>
 <body>
-  <canvas id="signal"></canvas>
   <div class="vignette"></div>
+  <canvas id="signal"></canvas>
 
   <div class="frame">
     <div class="top">
