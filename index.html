@@ -8,7 +8,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root{
-    --void:#A8AEB6;
+    --void:#A9AFB7;
     --void-2:#F4F5F6;
     --ash:#7C828C;
     --ash-dim:#B9BEC6;
@@ -27,15 +27,7 @@
   html,body{height:100%;}
 
   body{
-    background:
-      radial-gradient(
-        ellipse 115% 92% at 50% 42%,
-        #FFFFFF 0%,
-        #FFFFFF 34%,
-        #ECEEF1 54%,
-        #D0D5DC 74%,
-        var(--void) 100%
-      );
+    background:var(--void);
     color:var(--bone);
     font-family:'IBM Plex Mono',monospace;
     overflow:hidden;
@@ -217,21 +209,22 @@
   let t = 0;
 
   function drawHalo(){
-    ctx.fillStyle = '#8F97A2';
+    // grey field, like the corners of the reference design
+    ctx.fillStyle = '#A9AFB7';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.save();
-    ctx.translate(w * 0.5, h * 0.42);
-    ctx.scale(w * 1.05, h * 0.88);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
-    g.addColorStop(0, '#FFFFFF');
+    // white spotlight that fades out before the farthest corner,
+    // so the grey edge is always visible on screen
+    const cx = w * 0.5, cy = h * 0.45;
+    const R = Math.hypot(w * 0.5, h * 0.55);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    g.addColorStop(0,    '#FFFFFF');
     g.addColorStop(0.42, '#FFFFFF');
-    g.addColorStop(0.68, 'rgba(236,238,241,0.92)');
-    g.addColorStop(0.88, 'rgba(200,205,212,0.45)');
-    g.addColorStop(1, 'rgba(143,151,162,0)');
+    g.addColorStop(0.66, 'rgba(255,255,255,0.6)');
+    g.addColorStop(0.86, 'rgba(255,255,255,0.14)');
+    g.addColorStop(1,    'rgba(255,255,255,0)');
     ctx.fillStyle = g;
-    ctx.fillRect(-1, -1, 2, 2);
-    ctx.restore();
+    ctx.fillRect(0, 0, w, h);
   }
 
   // a long quiet baseline that, in the final stretch, lifts off the floor
