@@ -8,7 +8,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root{
-    --void:#C4C9D0;
+    --void:#A8AEB6;
     --void-2:#F4F5F6;
     --ash:#7C828C;
     --ash-dim:#B9BEC6;
@@ -19,12 +19,23 @@
 
   *{margin:0;padding:0;box-sizing:border-box;}
 
-  html{color-scheme:light;}
+  html{
+    color-scheme:light;
+    background:var(--void);
+  }
 
   html,body{height:100%;}
 
   body{
-    background:var(--void);
+    background:
+      radial-gradient(
+        ellipse 115% 92% at 50% 42%,
+        #FFFFFF 0%,
+        #FFFFFF 34%,
+        #ECEEF1 54%,
+        #D0D5DC 74%,
+        var(--void) 100%
+      );
     color:var(--bone);
     font-family:'IBM Plex Mono',monospace;
     overflow:hidden;
@@ -32,23 +43,7 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* background halo */
-  .vignette{
-    position:fixed;
-    inset:0;
-    z-index:0;
-    pointer-events:none;
-    background:radial-gradient(
-      ellipse 92% 78% at 50% 44%,
-      #FFFFFF 0%,
-      #FFFFFF 30%,
-      #ECEEF1 52%,
-      #D8DCE2 72%,
-      rgba(196,201,208,0) 100%
-    );
-  }
-
-  /* signal line — above vignette so the rising trace stays visible */
+  /* signal line — transparent canvas over the background halo */
   #signal{
     position:fixed;
     inset:0;
@@ -178,7 +173,6 @@
 </style>
 </head>
 <body>
-  <div class="vignette"></div>
   <canvas id="signal"></canvas>
 
   <div class="frame">
